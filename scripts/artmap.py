@@ -14,7 +14,7 @@ class ARTModule(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self.weights = np.ones((self.category_size, self.input_size))
+        self.weights = np.random.rand(self.category_size, self.input_size)  # Random initialization
 
     def activate(self, input_vector: np.ndarray) -> int:
         match_scores = np.minimum(input_vector, self.weights).sum(axis=1) / (self.weights.sum(axis=1) + 1e-10)
@@ -67,13 +67,12 @@ class ARTMAP(BaseModel):
         predicted_artb = self.map_field.predict(arta_category)
 
         if predicted_artb != artb_category:
-            self.arta.vigilance = min(self.arta.vigilance + 0.1, 0.9)  # Increase vigilance, but cap it
+            self.arta.vigilance = min(self.arta.vigilance + 0.1, 0.99)  # Increase vigilance more aggressively
             return self.train(input_vector, target_vector)  # Recursive call
 
         self.arta.learn(input_vector, arta_category)
         self.artb.learn(target_vector, artb_category)
         self.map_field.learn(arta_category, artb_category)
-        
         print(f"Trained: Input {input_vector} -> ARTa category {arta_category} -> ARTb category {artb_category}")
 
     def predict(self, input_vector: np.ndarray) -> int:
@@ -92,25 +91,25 @@ class ARTMAP(BaseModel):
 
 # Example usage
 artmap = ARTMAP(
-    arta=ARTModule(input_size=4, category_size=10, vigilance=0.8),
-    artb=ARTModule(input_size=3, category_size=3, vigilance=0.9),
+    arta=ARTModule(input_size=4, category_size=10, vigilance=0.95),
+    artb=ARTModule(input_size=3, category_size=3, vigilance=0.95),
     map_field=MapField(arta_size=10, artb_size=3),
     learning_rate=0.5
 )
 
-# Training 1D
-input_data = np.array([0.1, 0.2, 0.3, 0.4])
-target_data = np.array([1, 0, 0])
-artmap.train(input_data, target_data)
+# # Training 1D
+# input_data = np.array([0.1, 0.2, 0.3, 0.4])
+# target_data = np.array([1, 0, 0])
+# artmap.train(input_data, target_data)
 
-# Prediction
-new_input = np.array([0.15, 0.25, 0.35, 0.45])
+# # Prediction
+# new_input = np.array([0.15, 0.25, 0.35, 0.45])
 
-predicted_category = artmap.predict(new_input)
-print(f"Predicted category: {predicted_category}")
+# predicted_category = artmap.predict(new_input)
+# print(f"Predicted category: {predicted_category}")
 
-predicted_class = artmap.predict_class(new_input)
-print(f"Predicted class: {predicted_class}")
+# predicted_class = artmap.predict_class(new_input)
+# print(f"Predicted class: {predicted_class}")
 
 # Training 2D
 print('2D example\n\n')
