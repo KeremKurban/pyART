@@ -67,19 +67,22 @@ class ARTMAP(BaseModel):
         predicted_artb = self.map_field.predict(arta_category)
 
         if predicted_artb != artb_category:
-            #self.arta.vigilance += 0.1  # Increase vigilance
             self.arta.vigilance = min(self.arta.vigilance + 0.1, 0.9)  # Increase vigilance, but cap it
             return self.train(input_vector, target_vector)  # Recursive call
 
         self.arta.learn(input_vector, arta_category)
         self.artb.learn(target_vector, artb_category)
         self.map_field.learn(arta_category, artb_category)
+        
+        print(f"Trained: Input {input_vector} -> ARTa category {arta_category} -> ARTb category {artb_category}")
 
     def predict(self, input_vector: np.ndarray) -> int:
         arta_category = self.arta.activate(input_vector)
         if arta_category == -1:
             return -1  # Unable to classify
-        return self.map_field.predict(arta_category)
+        predicted_artb = self.map_field.predict(arta_category)
+        print(f"Prediction: Input {input_vector} -> ARTa category {arta_category} -> ARTb category {predicted_artb}")
+        return predicted_artb
 
     def predict_class(self, input_vector: np.ndarray) -> np.ndarray:
         artb_category = self.predict(input_vector)
